@@ -1,0 +1,12 @@
+{
+  "name": "unwrapped",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "workspaces": ["sdk", "cli", "app"],
+  "scripts": {
+    "cli": "npm run --silent cli -w cli --",
+    "typecheck": "npm run typecheck -w sdk && npm run typecheck -w cli && npm run typecheck -w app",
+    "test:js": "npm test -w sdk"
+  }
+}

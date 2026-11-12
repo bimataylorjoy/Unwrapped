@@ -1,0 +1,39 @@
+# Every 30 minutes, each price reporter posts BTC/USD from its own exchange
+# to the testnet deployment.
+#
+# Needs one repository secret, ORACLE_KEYS: a JSON object mapping each
+# reporter account in deployments/testnet.json to its private key, e.g.
+#   {"oracle-coinbase.unwrapped.testnet": "ed25519:…", …}
+# Without the secret the job does nothing.
+name: Price reporters (testnet)
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+jobs:
+  report:
+    runs-on: ubuntu-24.04
+    env:
+      ORACLE_KEYS: ${{ secrets.ORACLE_KEYS }}
+    steps:
+      - if: env.ORACLE_KEYS == ''
+        run: echo "ORACLE_KEYS is not set; skipping."
+      - if: env.ORACLE_KEYS != ''
+        uses: actions/checkout@v4
+      - if: env.ORACLE_KEYS != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - if: env.ORACLE_KEYS != ''
+        run: |
+          npm ci
+          node -e '
+            const fs = require("fs"), path = require("path"), os = require("os");
+            const dir = path.join(os.homedir(), ".near-credentials", "testnet");
+            fs.mkdirSync(dir, { recursive: true });
+            for (const [account, key] of Object.entries(JSON.parse(process.env.ORACLE_KEYS))) {
+              fs.writeFileSync(path.join(dir, account + ".json"), JSON.stringify({ account_id: account, private_key: key }), { mode: 0o600 });
+            }'
+          npm run cli -- keeper --once

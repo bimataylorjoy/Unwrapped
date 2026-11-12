@@ -1,0 +1,14 @@
+[package]
+name = "mock-signer"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Sandbox stand-in for the NEAR Chain Signatures contract (v1.signer). Produces real secp256k1 signatures from a fixed test seed."
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+near-sdk = { workspace = true }
+k256 = { version = "0.13", default-features = false, features = ["ecdsa", "arithmetic"] }
+hex = { version = "0.4", default-features = false, features = ["alloc"] }

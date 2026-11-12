@@ -1,0 +1,13 @@
+[package]
+name = "mock-ft"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Test stablecoin (NEP-141, 6 decimals) with a public faucet. Testnet and sandbox only."
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+near-sdk = { workspace = true }
+near-contract-standards = { workspace = true }

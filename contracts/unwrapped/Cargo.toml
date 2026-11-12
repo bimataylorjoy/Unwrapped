@@ -1,0 +1,18 @@
+[package]
+name = "unwrapped"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Borrow stablecoins against native BTC held by a NEAR Chain Signatures key. No bridge, no wrapped token."
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+near-sdk = { workspace = true }
+near-contract-standards = { workspace = true }
+hex = { version = "0.4", default-features = false, features = ["alloc"] }
+
+[dev-dependencies]
+near-sdk = { workspace = true, features = ["unit-testing"] }
+bitcoin = "0.32"

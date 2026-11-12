@@ -1,0 +1,21 @@
+[workspace]
+resolver = "2"
+members = [
+    "contracts/unwrapped",
+    "contracts/mock-ft",
+    "contracts/mock-signer",
+    "contracts/mock-btc-client",
+    "integration-tests",
+]
+
+[workspace.dependencies]
+near-sdk = "5.30"
+near-contract-standards = "5.30"
+
+[profile.release]
+codegen-units = 1
+opt-level = "z"
+lto = true
+debug = false
+panic = "abort"
+overflow-checks = true

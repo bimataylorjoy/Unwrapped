@@ -1,0 +1,26 @@
+{
+  "network": "testnet",
+  "rpcUrl": "https://test.rpc.fastnear.com",
+  "btcNetwork": "testnet",
+  "operator": "unwrapped.testnet",
+  "contract": "vault.unwrapped.testnet",
+  "usdc": "usdc.unwrapped.testnet",
+  "mpcSigner": "v1.signer-prod.testnet",
+  "btcLightClient": "btc-client-v4.testnet",
+  "explorer": "https://testnet.nearblocks.io",
+  "deployedAt": "2026-11-12T09:31:43.350Z",
+  "oracles": [
+    {
+      "account": "oracle-coinbase.unwrapped.testnet",
+      "source": "coinbase"
+    },
+    {
+      "account": "oracle-kraken.unwrapped.testnet",
+      "source": "kraken"
+    },
+    {
+      "account": "oracle-bitstamp.unwrapped.testnet",
+      "source": "bitstamp"
+    }
+  ]
+}

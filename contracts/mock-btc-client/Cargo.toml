@@ -1,0 +1,13 @@
+[package]
+name = "mock-btc-client"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Sandbox stand-in for the NEAR Bitcoin light client. Verifies real merkle proofs against block headers registered by the test."
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+near-sdk = { workspace = true }
+hex = { version = "0.4", default-features = false, features = ["alloc"] }
