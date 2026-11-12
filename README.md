@@ -41,7 +41,7 @@ Three ways, from no setup to the live deployment.
 
 ### 1. Run the tests (no accounts, no network keys)
 
-Requires Rust with the `wasm32-unknown-unknown` target.
+Requires Rust with the `wasm32-unknown-unknown` target and [`cargo-near`](https://github.com/near/cargo-near) (the sandbox tests build each contract with it; CI installs 0.22.0).
 
 ```sh
 ./scripts/test.sh
