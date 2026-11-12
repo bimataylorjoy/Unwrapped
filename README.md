@@ -149,6 +149,8 @@ Lender and liquidator commands: `faucet` (10,000 test USDC), `supply`, `withdraw
 
 ### 3. Use the web app
 
+Hosted: **https://bimataylorjoy.github.io/Unwrapped/** (rebuilt from `main` on every push). It reads the live testnet deployment directly; nothing to install. To run it locally instead:
+
 ```sh
 npm install
 npm run dev -w app      # http://localhost:5173
