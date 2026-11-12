@@ -18,19 +18,4 @@ jobs:
           ./scripts/test.sh 2>&1 | tee test-output.log
       - name: Report test failures
         if: failure()
-        run: |
-          # Annotations are readable without logging in, unlike raw logs.
-          grep -E "panicked at|^test .* FAILED|^---- |error(\[|:)|left:|right:" test-output.log | head -40 | sed 's/^/::error::/' || true
-
-  js:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run typecheck
-      - run: npm run test:js
-      - run: npm run build -w app
+        run: ./scripts/ci-report-failure.sh test-output.log
