@@ -174,62 +174,78 @@ export function App() {
   return (
     <>
       <header className="top">
-        <a className="brand" href="./">
-          <span className="mark" aria-hidden="true">
-            <svg viewBox="0 0 32 32" width="28" height="28">
-              <rect width="32" height="32" rx="8" fill="currentColor" />
-              <path d="M9 8v10a7 7 0 0 0 14 0V8" fill="none" stroke="#f7931a" strokeWidth="3.4" strokeLinecap="round" />
-            </svg>
-          </span>
-          Unwrapped
-        </a>
-        <div className="top-right">
-          <span className="pill">NEAR {D.network}</span>
-          <span className="pill">Bitcoin {D.btcNetwork}</span>
-          {price ? (
-            <span className="pill" title={`Median of ${price.sources} independent reporters, spread ${(price.spread_bps / 100).toFixed(2)}%`}>
-              BTC ${formatUsdc(price.usdc_per_btc, 0)} · {price.sources} sources
+        <div className="top-inner">
+          <a className="brand" href="./">
+            <span className="mark" aria-hidden="true">
+              <svg viewBox="0 0 32 32" width="22" height="22">
+                <path d="M8 6v12a8 8 0 0 0 16 0V6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="square" />
+              </svg>
             </span>
-          ) : (
-            cfg && (
-              <span className="pill warn" title={priceError ?? undefined}>
-                No BTC price
+            Unwrapped
+          </a>
+          <nav className="sections" role="tablist" aria-label="Sections">
+            {(
+              [
+                ["borrow", "Vaults"],
+                ["lend", "Lending"],
+                ["market", "Market"],
+                ["how", "Method"],
+              ] as [Tab, string][]
+            ).map(([id, label]) => (
+              <button key={id} role="tab" aria-selected={tab === id} className={tab === id ? "on" : ""} onClick={() => setTab(id)}>
+                {label}
+              </button>
+            ))}
+          </nav>
+          <div className="top-right">
+            {price ? (
+              <span className="ticker" title={`Median of ${price.sources} independent reporters, spread ${(price.spread_bps / 100).toFixed(2)}%`}>
+                <span className="ticker-label">BTC</span> ${formatUsdc(price.usdc_per_btc, 0)}
+                <span className="ticker-sub">median · {price.sources}</span>
               </span>
-            )
-          )}
-          {session ? (
-            <button
-              className="btn ghost"
-              title="Sign out"
-              onClick={async () => {
-                await session.signOut();
-                setSession(undefined);
-              }}
-            >
-              {short(session.accountId, 14, 8)}
-              {session.kind === "devkey" && <span className="tag">dev key</span>}
-            </button>
-          ) : (
-            <button className="btn primary" onClick={() => setConnecting(true)}>
-              Connect
-            </button>
-          )}
+            ) : (
+              cfg && (
+                <span className="ticker warn" title={priceError ?? undefined}>
+                  <span className="ticker-label">BTC</span> no price
+                </span>
+              )
+            )}
+            {session ? (
+              <button
+                className="account"
+                title="Sign out"
+                onClick={async () => {
+                  await session.signOut();
+                  setSession(undefined);
+                }}
+              >
+                {short(session.accountId, 14, 8)}
+                {session.kind === "devkey" && <span className="tag">dev key</span>}
+              </button>
+            ) : (
+              <button className="btn primary" onClick={() => setConnecting(true)}>
+                Connect
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
       <main>
-        <section className="hero">
-          <h1>
-            Borrow against Bitcoin
-            <br />
-            that <em>never leaves Bitcoin</em>.
-          </h1>
-          <p className="lede">
-            No bridge. No wrapped token. Your BTC sits on a native Bitcoin address whose only key is held by a NEAR
-            smart contract, so it can back a loan without ever being handed to a custodian.
-          </p>
+        <section className="lead">
+          <div className="lead-text">
+            <p className="kicker">
+              Native Bitcoin credit · NEAR {D.network} · Bitcoin {D.btcNetwork}
+            </p>
+            <h1>
+              Borrow against Bitcoin that <em>never leaves Bitcoin.</em>
+            </h1>
+            <p className="dek">
+              No bridge, no wrapped token. A NEAR contract holds the only right to sign for your vault's native address.
+            </p>
+          </div>
           {pool && cfg && (
-            <dl className="stats">
+            <dl className="lead-figures">
               <div>
                 <dt>Supplied</dt>
                 <dd>${formatUsdc(pool.total_assets, 0)}</dd>
@@ -239,11 +255,11 @@ export function App() {
                 <dd>${formatUsdc(pool.total_debt, 0)}</dd>
               </div>
               <div>
-                <dt>Borrow APR</dt>
+                <dt>Borrow rate</dt>
                 <dd>{pct(pool.borrow_apr_bps, 2)}</dd>
               </div>
               <div>
-                <dt>Supply APR</dt>
+                <dt>Supply rate</dt>
                 <dd>{pct(pool.supply_apr_bps, 2)}</dd>
               </div>
               <div>
@@ -258,21 +274,6 @@ export function App() {
           )}
         </section>
 
-        <nav className="tabs" role="tablist">
-          {(
-            [
-              ["borrow", "Borrow"],
-              ["lend", "Lend"],
-              ["market", "All vaults"],
-              ["how", "How it works"],
-            ] as [Tab, string][]
-          ).map(([id, label]) => (
-            <button key={id} role="tab" aria-selected={tab === id} className={tab === id ? "on" : ""} onClick={() => setTab(id)}>
-              {label}
-            </button>
-          ))}
-        </nav>
-
         {loadError && <p className="notice error">Could not reach NEAR: {loadError}</p>}
         {!ctx && !loadError && <p className="notice">Loading chain state…</p>}
 
@@ -283,25 +284,28 @@ export function App() {
       </main>
 
       <footer>
-        <span>
-          Contract{" "}
-          <a href={nearAccountUrl(D.contract)} target="_blank" rel="noreferrer">
-            {D.contract}
-          </a>
-        </span>
-        <span>
-          Signer{" "}
-          <a href={nearAccountUrl(D.mpcSigner)} target="_blank" rel="noreferrer">
-            {D.mpcSigner}
-          </a>
-        </span>
-        <span>
-          Bitcoin light client{" "}
-          <a href={nearAccountUrl(D.btcLightClient)} target="_blank" rel="noreferrer">
-            {D.btcLightClient}
-          </a>
-        </span>
-        <span>Testnet software. Test assets only.</span>
+        <div className="footer-inner">
+          <span className="colophon">Unwrapped</span>
+          <span>
+            Contract{" "}
+            <a href={nearAccountUrl(D.contract)} target="_blank" rel="noreferrer">
+              {D.contract}
+            </a>
+          </span>
+          <span>
+            Signer{" "}
+            <a href={nearAccountUrl(D.mpcSigner)} target="_blank" rel="noreferrer">
+              {D.mpcSigner}
+            </a>
+          </span>
+          <span>
+            Light client{" "}
+            <a href={nearAccountUrl(D.btcLightClient)} target="_blank" rel="noreferrer">
+              {D.btcLightClient}
+            </a>
+          </span>
+          <span>Testnet software. Test assets only.</span>
+        </div>
       </footer>
 
       <div className="toasts" aria-live="polite">
@@ -340,19 +344,27 @@ export function App() {
 }
 
 function BorrowTab({ ctx, vaults }: { ctx: Ctx; vaults: Vault[] }) {
+  const [selected, setSelected] = useState<number>();
+  const current = vaults.find((v) => v.vault_id === selected) ?? vaults[0];
+
   const mint = () =>
     ctx.run("Creating a vault", async () => {
       const res = await ctx.send(app.mintVault(ctx.cfg.mint_fee));
       const v = res.value as Vault | null;
       if (!v) throw new Error("The signer did not return a key; the fee was refunded.");
-      return { detail: `Vault #${v.vault_id} controls ${v.btc_address}`, href: res.txHash && nearTxUrl(res.txHash) };
+      setSelected(v.vault_id);
+      return { detail: `Vault No. ${v.vault_id} controls ${v.btc_address}`, href: res.txHash && nearTxUrl(res.txHash) };
     });
 
   if (!ctx.session) {
     return (
       <section className="empty">
-        <h2>Connect to open a vault</h2>
-        <p>A vault is an NFT in your NEAR wallet that controls its own native Bitcoin address.</p>
+        <p className="kicker">Vaults</p>
+        <h2>A vault is an NFT that owns a Bitcoin address.</h2>
+        <p>
+          Connect a NEAR wallet to open one. Its key is generated by NEAR's MPC network, and only this contract can ask it
+          to sign.
+        </p>
         <button className="btn primary" onClick={ctx.connect}>
           Connect
         </button>
@@ -363,8 +375,22 @@ function BorrowTab({ ctx, vaults }: { ctx: Ctx; vaults: Vault[] }) {
   return (
     <section>
       <div className="section-head">
-        <h2>Your vaults</h2>
-        <button className="btn primary" disabled={ctx.busy} onClick={mint}>
+        <div className="vault-tabs" role="tablist" aria-label="Your vaults">
+          <span className="kicker">Your vaults</span>
+          {vaults.map((v) => (
+            <button
+              key={v.vault_id}
+              role="tab"
+              aria-selected={current?.vault_id === v.vault_id}
+              className={current?.vault_id === v.vault_id ? "on" : ""}
+              onClick={() => setSelected(v.vault_id)}
+            >
+              No. {v.vault_id}
+              {v.locked && <span className="dot ochre" aria-label="secures a loan" />}
+            </button>
+          ))}
+        </div>
+        <button className="btn" disabled={ctx.busy} onClick={mint}>
           New vault
         </button>
       </div>
@@ -376,9 +402,7 @@ function BorrowTab({ ctx, vaults }: { ctx: Ctx; vaults: Vault[] }) {
           </p>
         </div>
       )}
-      {vaults.map((v) => (
-        <VaultCard key={v.vault_id} ctx={ctx} vault={v} />
-      ))}
+      {current && <VaultCard key={current.vault_id} ctx={ctx} vault={current} />}
     </section>
   );
 }

@@ -16,6 +16,7 @@ import {
 } from "@unwrapped/sdk";
 import type { Ctx } from "./App.tsx";
 import { D, app, btcAddressUrl, btcTxUrl, esplora, nearTxUrl, pct, short } from "./chain.ts";
+import { FlowDiagram } from "./FlowDiagram.tsx";
 
 type Action = "borrow" | "repay" | "withdraw" | "transfer";
 
@@ -83,95 +84,109 @@ export function VaultCard({ ctx, vault }: { ctx: Ctx; vault: Vault }) {
       }
     });
 
+  const onBitcoin = outputs === undefined ? null : outputs.reduce((sum, o) => sum + o.value, 0);
+  const status = vault.liquidatable ? "Liquidatable" : vault.locked ? "Secures a loan" : "Unencumbered";
+
   return (
     <article className={`vault ${vault.liquidatable ? "danger" : ""}`}>
-      <header className="vault-head">
-        <h3>Vault #{vault.vault_id}</h3>
-        <div className="badges">
-          {vault.locked ? <span className="badge locked">Secures a loan</span> : <span className="badge">Unencumbered</span>}
-          {vault.liquidatable && <span className="badge red">Liquidatable</span>}
-        </div>
-      </header>
-
-      <div className="address">
-        <div>
-          <span className="label">Native Bitcoin address ({D.btcNetwork})</span>
-          <code>{vault.btc_address}</code>
-        </div>
-        <div className="address-actions">
-          <button
-            className="btn small"
-            onClick={async () => {
-              await navigator.clipboard.writeText(vault.btc_address);
-              setCopied(true);
-              setTimeout(() => setCopied(false), 1500);
-            }}
-          >
-            {copied ? "Copied" : "Copy"}
-          </button>
-          <a className="btn small" href={btcAddressUrl(vault.btc_address)} target="_blank" rel="noreferrer">
-            Explorer
-          </a>
-        </div>
-      </div>
-
-      <dl className="metrics">
-        <div>
-          <dt>Collateral</dt>
-          <dd>
-            {formatBtc(sats)} <small>BTC</small>
-          </dd>
-          <span className="sub">{value === null ? "no price right now" : `$${formatUsdc(value)}`}</span>
-        </div>
-        <div>
-          <dt>Debt</dt>
-          <dd>
-            {formatUsdc(debt)} <small>USDC</small>
-          </dd>
-          <span className="sub">{pct(pool.borrow_apr_bps, 2)} APR</span>
-        </div>
-        <div>
-          <dt>Can still borrow</dt>
-          <dd>
-            {formatUsdc(borrowable)} <small>USDC</small>
-          </dd>
-          <span className="sub">up to {pct(cfg.max_ltv_bps, 0)} LTV</span>
-        </div>
-        <div>
-          <dt>Liquidation price</dt>
-          <dd>{liquidationPrice === null ? "—" : `$${formatUsdc(liquidationPrice, 0)}`}</dd>
-          <span className="sub">{price ? `BTC now $${formatUsdc(price.usdc_per_btc, 0)}` : "no price"}</span>
-        </div>
-      </dl>
-
-      <LtvBar ltvBps={vault.ltv_bps} maxBps={cfg.max_ltv_bps} liqBps={cfg.liq_threshold_bps} />
-
-      <div className="deposits">
-        <div className="deposits-head">
-          <span className="label">Bitcoin on this address</span>
-          <button className="link" onClick={loadOutputs}>
-            Refresh
-          </button>
-        </div>
-        {outputs === undefined && <p className="muted small">Reading Bitcoin…</p>}
-        {outputs?.length === 0 && (
-          <p className="muted small">
-            Nothing here yet. Send {D.btcNetwork} BTC to the address above; after {cfg.min_confirmations} confirmations
-            you can prove the deposit to NEAR and borrow against it.
+      <div className="vault-main">
+        <header className="vault-head">
+          <p className="kicker">
+            <span className={`dot ${vault.liquidatable ? "red" : vault.locked ? "ochre" : "olive"}`} aria-hidden="true" />
+            {status}
           </p>
-        )}
-        {outputs?.map((o) => (
-          <div className="deposit" key={`${o.txid}:${o.vout}`}>
-            <a href={btcTxUrl(o.txid)} target="_blank" rel="noreferrer" title={o.txid}>
-              {short(o.txid)}:{o.vout}
-            </a>
-            <span className="num">{formatBtc(o.value)} BTC</span>
-            <DepositStatus o={o} min={cfg.min_confirmations} busy={ctx.busy} onProve={() => prove(o)} />
+          <h2 className="vault-title">
+            Vault <span className="no">No.</span> {vault.vault_id}
+          </h2>
+          <div className="address">
+            <code title={vault.btc_address}>{vault.btc_address}</code>
+            <span className="address-actions">
+              <button
+                className="link"
+                onClick={async () => {
+                  await navigator.clipboard.writeText(vault.btc_address);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 1500);
+                }}
+              >
+                {copied ? "Copied" : "Copy"}
+              </button>
+              <a className="link" href={btcAddressUrl(vault.btc_address)} target="_blank" rel="noreferrer">
+                Explorer
+              </a>
+            </span>
           </div>
-        ))}
+          <p className="address-note">
+            Native {D.btcNetwork} address. Its key is derived by NEAR's MPC network for this contract alone.
+          </p>
+        </header>
+
+        <FlowDiagram vault={vault} onBitcoinSats={onBitcoin} />
+
+        <section className="deposits">
+          <div className="deposits-head">
+            <h3>Bitcoin on this address</h3>
+            <button className="link" onClick={loadOutputs}>
+              Refresh
+            </button>
+          </div>
+          {outputs === undefined && <p className="muted small">Reading Bitcoin…</p>}
+          {outputs?.length === 0 && (
+            <p className="muted small">
+              Nothing here yet. Send {D.btcNetwork} BTC to the address above; after {cfg.min_confirmations} confirmations
+              prove the deposit to NEAR and borrow against it.
+            </p>
+          )}
+          {outputs?.map((o) => (
+            <div className="deposit" key={`${o.txid}:${o.vout}`}>
+              <a href={btcTxUrl(o.txid)} target="_blank" rel="noreferrer" title={o.txid}>
+                {short(o.txid)}:{o.vout}
+              </a>
+              <span className="num">{formatBtc(o.value)} BTC</span>
+              <DepositStatus o={o} min={cfg.min_confirmations} busy={ctx.busy} onProve={() => prove(o)} />
+            </div>
+          ))}
+        </section>
       </div>
 
-      <div className="actions">
+      <aside className="vault-side">
+        <dl className="figures">
+          <div className="lead-figure">
+            <dt>Collateral</dt>
+            <dd>
+              {formatBtc(sats)} <small>BTC</small>
+            </dd>
+            <span className="sub">{value === null ? "no price right now" : `$${formatUsdc(value)} at the median price`}</span>
+          </div>
+          <div>
+            <dt>Debt</dt>
+            <dd>
+              {formatUsdc(debt)} <small>USDC</small>
+            </dd>
+            <span className="sub">{pct(pool.borrow_apr_bps, 2)} APR</span>
+          </div>
+          <div>
+            <dt>Available</dt>
+            <dd>
+              {formatUsdc(borrowable)} <small>USDC</small>
+            </dd>
+            <span className="sub">to {pct(cfg.max_ltv_bps, 0)} LTV</span>
+          </div>
+          <div>
+            <dt>Liquidation price</dt>
+            <dd>{liquidationPrice === null ? "—" : `$${formatUsdc(liquidationPrice, 0)}`}</dd>
+            <span className="sub">{liquidationPrice === null ? "no loan open" : `above ${pct(cfg.liq_threshold_bps, 0)} LTV`}</span>
+          </div>
+          <div>
+            <dt>BTC price</dt>
+            <dd>{price ? `$${formatUsdc(price.usdc_per_btc, 0)}` : "—"}</dd>
+            <span className="sub">{price ? `median of ${price.sources} reporters` : "reporters unavailable"}</span>
+          </div>
+        </dl>
+
+        <LtvBar ltvBps={vault.ltv_bps} maxBps={cfg.max_ltv_bps} liqBps={cfg.liq_threshold_bps} />
+
+        <div className="actions">
         <div className="segmented" role="tablist">
           {(
             [
@@ -268,7 +283,8 @@ export function VaultCard({ ctx, vault }: { ctx: Ctx; vault: Vault }) {
             }
           />
         )}
-      </div>
+        </div>
+      </aside>
     </article>
   );
 }
@@ -295,7 +311,7 @@ function DepositStatus({ o, min, busy, onProve }: { o: ChainOutput; min: number;
     );
   }
   return (
-    <button className="btn small primary" disabled={busy} onClick={onProve}>
+    <button className="btn small" disabled={busy} onClick={onProve}>
       Prove to NEAR
     </button>
   );
@@ -303,7 +319,7 @@ function DepositStatus({ o, min, busy, onProve }: { o: ChainOutput; min: number;
 
 export function LtvBar({ ltvBps, maxBps, liqBps }: { ltvBps: number | null; maxBps: number; liqBps: number }) {
   const ltv = ltvBps === null ? 0 : Math.min(ltvBps, 10_000);
-  const tone = ltv > liqBps ? "red" : ltv > maxBps ? "amber" : "green";
+  const tone = ltv > liqBps ? "red" : ltv > maxBps ? "ochre" : "olive";
   return (
     <div className="ltv">
       <div className="ltv-track">
