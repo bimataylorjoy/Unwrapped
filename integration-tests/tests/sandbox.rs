@@ -46,7 +46,7 @@ async fn wasm() -> &'static Wasm {
         let build = |p: &'static str| async move {
             near_workspaces::compile_project(p)
                 .await
-                .unwrap_or_else(|e| panic!("building {p}: {e}"))
+                .unwrap_or_else(|e| panic!("building {p}: {e:?}"))
         };
         Wasm {
             app: build("../contracts/unwrapped").await,
